@@ -1,0 +1,75 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "forge-std/Test.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "../src/TokenStaking.sol";
+
+contract MockERC20 is ERC20 {
+    constructor() ERC20("MockToken", "MTK") {
+        _mint(msg.sender, 1000000 * 10 ** decimals());
+    }
+
+    function mint(address to, uint256 amount) external {
+        _mint(to, amount);
+    }
+}
+
+contract TokenStakingTest is Test {
+    MockERC20 stakingToken;
+    TokenStaking tokenStaking;
+    address owner = address(1);
+    address user = address(2);
+
+    function setUp() public {
+        stakingToken = new MockERC20();
+        tokenStaking = new TokenStaking(stakingToken, 1, owner);
+
+        stakingToken.mint(user, 1000 * 10 ** stakingToken.decimals());
+        vm.prank(user);
+        stakingToken.approve(address(tokenStaking), 1000 * 10 ** stakingToken.decimals());
+    }
+
+    function testStake() public {
+        vm.prank(user);
+        tokenStaking.stake(100 * 10 ** stakingToken.decimals());
+
+        (uint256 amount, uint256 startTime) = tokenStaking.stakes(user);
+        assertEq(amount, 100 * 10 ** stakingToken.decimals());
+        assertEq(startTime, block.timestamp);
+    }
+
+    function testUnstake() public {
+        vm.prank(user);
+        tokenStaking.stake(100 * 10 ** stakingToken.decimals());
+
+        vm.warp(block.timestamp + 1000); // Fast forward time
+
+        vm.prank(user);
+        tokenStaking.unstake();
+
+        uint256 balance = stakingToken.balanceOf(user);
+        assertEq(balance, 1000 * 10 ** stakingToken.decimals()); // Initial balance + staked amount
+
+        uint256 reward = tokenStaking.rewards(user);
+        assertEq(reward, 100 * 10 ** stakingToken.decimals() * 1000);
+    }
+
+    function testClaimRewards() public {
+        vm.prank(user);
+        tokenStaking.stake(100 * 10 ** stakingToken.decimals());
+
+        vm.warp(block.timestamp + 1000); // Fast forward time
+
+        vm.prank(user);
+        tokenStaking.unstake();
+
+        vm.prank(user);
+        tokenStaking.claimRewards();
+
+        uint256 balance = stakingToken.balanceOf(user);
+        assertEq(balance, 1000 * 10 ** stakingToken.decimals() + 100 * 10 ** stakingToken.decimals() * 1000); // Initial balance + staked amount + reward
+    }
+}
