@@ -1,13 +1,12 @@
-# Sample Hardhat Project
+# Token Staking Contract
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a Hardhat Ignition module that deploys that contract.
+## Overview
 
-Try running some of the following tasks:
+A smart contract for staking ERC-20 tokens and earning rewards.
 
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat ignition deploy ./ignition/modules/Lock.js
-```
+## Features
+
+- Stake and unstake ERC-20 tokens
+- Adjustable reward rate
+- Claim rewards
+
