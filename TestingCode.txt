@@ -1,3 +1,4 @@
+// I have written the testing code in foundry. Because this is a hardhat project, I will upload a separate notepad file.
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
